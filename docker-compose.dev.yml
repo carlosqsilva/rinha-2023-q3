@@ -1,0 +1,45 @@
+version: "3.5"
+
+volumes:
+  postgres:
+
+networks:
+  rinha:
+    driver: bridge
+
+services:
+  database:
+    image: docker.io/library/postgres:15.4-alpine
+    hostname: database
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_USER: dev
+      POSTGRES_DB: rinha
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "0.4GB"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - rinha
+
+  api1:
+    image: insalubre/rinhabackend:latest
+    hostname: api
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    expose:
+      - "8080"
+    networks:
+      - rinha

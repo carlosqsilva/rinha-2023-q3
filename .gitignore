@@ -1,0 +1,25 @@
+# Binaries for programs and plugins
+main
+rinha-2023-q3
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+*.dsym
+
+# Ignore binary output folders
+bin/
+
+# Ignore common editor/system specific metadata
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# ENV
+.env
+
+# vweb and database
+*.db
+*.js
