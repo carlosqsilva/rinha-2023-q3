@@ -16,6 +16,10 @@ services:
       POSTGRES_USER: dev
       POSTGRES_DB: rinha
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "dev"]
+      interval: 5s
+      timeout: 5s
     ports:
       - "5432:5432"
     expose:
@@ -34,7 +38,8 @@ services:
     hostname: api1
     restart: unless-stopped
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -48,7 +53,8 @@ services:
     hostname: api2
     restart: unless-stopped
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     deploy:
       resources:
         limits:
