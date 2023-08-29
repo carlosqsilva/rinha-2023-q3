@@ -5,6 +5,7 @@ import picohttpparser
 import net.http
 import db.pg
 import net.urllib
+import time
 
 const (
 	port = 8080
@@ -51,6 +52,13 @@ fn (a App) find_by_id(people_id string) ?People {
 }
 
 [inline]
+fn (a App) save_people(people People) ! {
+	sql a.db {
+		insert people into People
+	} or { return error('failed to save: ${people.str()}') }
+}
+
+[inline]
 fn (a App) create_person(body string) &Response {
 	new_people := People.from_json(body) or {
 		return &Response{
@@ -64,13 +72,8 @@ fn (a App) create_person(body string) &Response {
 		}
 	}
 
-	mut failed:= false
-
-	sql a.db {
-		insert new_people into People
-	} or { failed = true }
-
-	if failed {
+	a.save_people(new_people) or {
+		eprintln(err)
 		return &Response{
 			status_code: http.Status.bad_request
 		}
@@ -150,7 +153,15 @@ fn (a App) handler(req picohttpparser.Request) &Response {
 }
 
 fn (a App) callback(_ voidptr, req picohttpparser.Request, mut res picohttpparser.Response) {
+	start := time.new_stopwatch()
+
 	response := a.handler(req)
+
+	duration := start.elapsed().milliseconds()
+	if duration > 1000 {
+		println('request took: ${duration}')
+	}
+
 
 	res.write_string('HTTP/1.1 ${int(response.status_code)} ${response.status_code.str()}\r\n')
 	for key, value in response.headers {
@@ -161,6 +172,7 @@ fn (a App) callback(_ voidptr, req picohttpparser.Request, mut res picohttpparse
 }
 
 fn main() {
+
 	mut app := &App{
 		db: pg.connect(pg.Config{
 			host: 'database'
@@ -170,10 +182,6 @@ fn main() {
 			dbname: 'rinha'
 		})!
 	}
-
-	// sql app.db {
-	// 	create table People
-	// }!
 
 	mut server := picoev.new(
 		port: port

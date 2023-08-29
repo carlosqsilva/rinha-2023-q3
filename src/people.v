@@ -4,11 +4,12 @@ import json
 import rand
 import time
 
+[table: 'people']
 pub struct People {
 	id        string [default: 'gen_random_uuid()'; primary; sql_type: 'uuid']
 	name      string [nonnull; sql_type: 'VARCHAR(100)']
 	nickname  string [nonnull; sql_type: 'VARCHAR(32)'; unique]
-	birthdate string [nonnull]
+	birthdate string [nonnull; sql_type: 'CHAR(10)']
 	stack     string
 	search    string
 }
@@ -49,6 +50,12 @@ fn PeopleDto.from_json(json_str string) !&PeopleDto {
 	mut dto := json.decode(PeopleDto, json_str)!
 	time.parse_format(dto.birthdate, 'YYYY-MM-DD') or {
 		return error('Invalid date: ${dto.birthdate}')
+	}
+	if dto.nickname.len > 32 {
+		return error('invalid nickname length')
+	}
+	if dto.name.len > 100 {
+		return error('invalid name length')
 	}
 	dto.id = rand.uuid_v4()
 	return &dto
