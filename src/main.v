@@ -6,9 +6,10 @@ import net.http
 import db.pg
 import net.urllib
 import time
+import os
 
 const (
-	port = 8080
+	port = os.getenv("PORT").int()
 )
 
 struct App {
@@ -175,7 +176,7 @@ fn main() {
 
 	mut app := &App{
 		db: pg.connect(pg.Config{
-			host: 'database'
+			host: 'localhost'
 			port: 5432
 			user: 'dev'
 			password: 'dev'

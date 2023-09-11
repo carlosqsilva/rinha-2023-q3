@@ -3,10 +3,6 @@ version: "3.5"
 volumes:
   postgres:
 
-networks:
-  default:
-    driver: bridge
-
 services:
   database:
     image: postgres:latest
@@ -20,78 +16,48 @@ services:
       test: ["CMD-SHELL", "pg_isready -U dev -d rinha"]
       interval: 5s
       timeout: 5s
-    ports:
-      - "5432:5432"
-    expose:
-      - "5432"
+    network_mode: host
     deploy:
       resources:
         limits:
-          cpus: "0.7"
+          cpus: "0.8"
           memory: "1.5GB"
     volumes:
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-      - postgres:/var/lib/postgresql/data
 
   api1:
-    image: insalubre/rinhabackend:latest
+    # image: insalubre/rinhabackend:latest
+    build: .
     hostname: api1
+    environment:
+      PORT: 8080
     restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
+    network_mode: host
     deploy:
       resources:
         limits:
-          cpus: "0.15"
-          memory: "0.25GB"
-    expose:
-      - "8080"
+          cpus: "0.25"
+          memory: "0.5GB"
 
   api2:
-    image: insalubre/rinhabackend:latest
+    # image: insalubre/rinhabackend:latest
+    build: .
     hostname: api2
+    environment:
+      PORT: 8081
     restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
+    network_mode: host
     deploy:
       resources:
         limits:
-          cpus: "0.15"
-          memory: "0.25GB"
-    expose:
-      - "8080"
-
-  api3:
-    image: insalubre/rinhabackend:latest
-    hostname: api3
-    restart: unless-stopped
-    depends_on:
-      database:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: "0.15"
-          memory: "0.25GB"
-    expose:
-      - "8080"
-
-  api4:
-    image: insalubre/rinhabackend:latest
-    hostname: api4
-    restart: unless-stopped
-    depends_on:
-      database:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: "0.15"
-          memory: "0.25GB"
-    expose:
-      - "8080"
+          cpus: "0.25"
+          memory: "0.5GB"
 
   nginx:
     image: nginx
@@ -101,8 +67,7 @@ services:
     depends_on:
       - api1
       - api2
-    ports:
-      - "9999:9999"
+    network_mode: host
     deploy:
       resources:
         limits:
